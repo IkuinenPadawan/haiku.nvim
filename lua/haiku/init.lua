@@ -3,6 +3,7 @@ local M = {}
 M.notes_winnr = nil
 
 M.setup = function(opts)
+	M.create_notes_file()
 	vim.api.nvim_create_user_command("Haiku", function()
 		M.toggle_notes()
 	end, {})
@@ -12,6 +13,24 @@ M.setup = function(opts)
 		':lua require("haiku").toggle_notes()<CR>',
 		{ noremap = true, silent = true }
 	)
+end
+
+M.notes_path = vim.fn.expand("~/.local/share/nvim/haiku/notes.md")
+
+M.create_notes_file = function()
+	if vim.fn.filereadable(M.notes_path) ~= 1 then
+		local dir_path = vim.fn.fnamemodify(M.notes_path, ":h")
+		vim.fn.mkdir(dir_path, "p")
+		local file = io.open(M.notes_path, "w")
+		if file then
+			file:write("# Haiku notes\n\n")
+			file:close()
+		end
+	end
+end
+
+M.setup_buffer_options = function(bufnr)
+	vim.api.nvim_buf_set_option(bufnr, "filetype", "markdown")
 end
 
 M.create_floating_window = function()
@@ -31,9 +50,10 @@ M.create_floating_window = function()
 		border = "rounded",
 	}
 
-	local buf = vim.api.nvim_create_buf(false, true)
+	local buffer = vim.api.nvim_create_buf(false, true)
+	M.setup_buffer_options(buffer)
 
-	local winnr = vim.api.nvim_open_win(buf, true, opts)
+	local winnr = vim.api.nvim_open_win(buffer, true, opts)
 
 	vim.api.nvim_win_set_option(winnr, "winblend", 10)
 	vim.api.nvim_win_set_option(winnr, "cursorline", true)
