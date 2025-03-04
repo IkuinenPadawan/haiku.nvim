@@ -31,8 +31,53 @@ end
 
 M.setup_buffer_options = function(bufnr)
 	vim.api.nvim_buf_set_option(bufnr, "filetype", "markdown")
+	vim.api.nvim_buf_set_option(bufnr, "buftype", "")
 end
 
+M.save_and_close = function()
+	if M.notes_winnr and vim.api.nvim_win_is_valid(M.notes_winnr) then
+		local bufnr = vim.api.nvim_win_get_buf(M.notes_winnr)
+		local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+		local has_content = false
+		for _, line in ipairs(lines) do
+			if line:match("%S") then
+				has_content = true
+				break
+			end
+		end
+
+		if has_content then
+			if #lines > 0 then
+				local notes_bufnr = vim.fn.bufnr(M.notes_path)
+				if notes_bufnr == -1 then
+					notes_bufnr = vim.fn.bufadd(M.notes_path)
+					vim.fn.bufload(notes_bufnr)
+				end
+
+				local current_lines = vim.api.nvim_buf_get_lines(notes_bufnr, 0, -1, false)
+
+				local new_content = {}
+				table.insert(new_content, "")
+
+				for _, line in ipairs(lines) do
+					table.insert(new_content, line)
+				end
+
+				vim.api.nvim_buf_set_lines(notes_bufnr, #current_lines, #current_lines, false, new_content)
+
+				vim.api.nvim_buf_call(notes_bufnr, function()
+					vim.cmd("silent write")
+				end)
+
+				vim.notify("Haiku saved", vim.log.levels.INFO)
+			end
+		end
+
+		vim.api.nvim_win_close(M.notes_winnr, true)
+		M.notes_winnr = nil
+	end
+end
 M.create_floating_window = function()
 	local width = math.floor(vim.o.columns * 0.3)
 	local height = math.floor(vim.o.lines * 0.1)
@@ -50,11 +95,18 @@ M.create_floating_window = function()
 		border = "rounded",
 	}
 
-	local buffer = vim.api.nvim_create_buf(false, true)
+	local buffer = vim.api.nvim_create_buf(false, false)
 	M.setup_buffer_options(buffer)
+	vim.api.nvim_buf_set_keymap(
+		buffer,
+		"n",
+		"<CR>",
+		'<cmd>lua require("haiku").save_and_close()<CR>',
+		{ noremap = true, desc = "Save note and close window" }
+	)
 
 	local winnr = vim.api.nvim_open_win(buffer, true, opts)
-
+	vim.cmd("startinsert")
 	vim.api.nvim_win_set_option(winnr, "winblend", 10)
 	vim.api.nvim_win_set_option(winnr, "cursorline", true)
 
