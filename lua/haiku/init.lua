@@ -123,6 +123,8 @@ M.create_floating_window = function()
 		row = row,
 		style = "minimal",
 		border = "rounded",
+		title = "Haiku",
+		title_pos = "center",
 	}
 
 	local buffer = vim.api.nvim_create_buf(false, true)
