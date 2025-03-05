@@ -31,7 +31,26 @@ end
 
 M.setup_buffer_options = function(bufnr)
 	vim.api.nvim_buf_set_option(bufnr, "filetype", "markdown")
-	vim.api.nvim_buf_set_option(bufnr, "buftype", "")
+	vim.api.nvim_buf_set_option(bufnr, "buftype", "nofile")
+	vim.api.nvim_buf_set_option(bufnr, "bufhidden", "wipe")
+	vim.api.nvim_buf_set_option(bufnr, "modified", false)
+
+	vim.api.nvim_create_autocmd("BufWinLeave", {
+		buffer = bufnr,
+		callback = function()
+			if M.notes_winnr then
+				M.notes_winnr = nil
+			end
+		end,
+	})
+
+	vim.api.nvim_create_autocmd("QuitPre", {
+		buffer = bufnr,
+		callback = function()
+			M.save_and_close()
+			return true
+		end,
+	})
 end
 
 M.save_and_close = function()
@@ -73,7 +92,7 @@ M.save_and_close = function()
 				vim.notify("Haiku saved", vim.log.levels.INFO)
 			end
 		end
-
+		vim.api.nvim_buf_set_option(bufnr, "modified", false)
 		vim.api.nvim_win_close(M.notes_winnr, true)
 		M.notes_winnr = nil
 	end
@@ -95,7 +114,7 @@ M.create_floating_window = function()
 		border = "rounded",
 	}
 
-	local buffer = vim.api.nvim_create_buf(false, false)
+	local buffer = vim.api.nvim_create_buf(false, true)
 	M.setup_buffer_options(buffer)
 	vim.api.nvim_buf_set_keymap(
 		buffer,
