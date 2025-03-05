@@ -97,6 +97,17 @@ M.save_and_close = function()
 		M.notes_winnr = nil
 	end
 end
+
+M.discard_and_close = function()
+	if M.notes_winnr and vim.api.nvim_win_is_valid(M.notes_winnr) then
+		local bufnr = vim.api.nvim_win_get_buf(M.notes_winnr)
+		vim.api.nvim_buf_set_option(bufnr, "modified", false)
+		vim.api.nvim_win_close(M.notes_winnr, true)
+		M.notes_winnr = nil
+		vim.notify("Note discarded", vim.log.levels.INFO, { title = "Haiku" })
+	end
+end
+
 M.create_floating_window = function()
 	local width = math.floor(vim.o.columns * 0.3)
 	local height = math.floor(vim.o.lines * 0.1)
@@ -122,6 +133,22 @@ M.create_floating_window = function()
 		"<CR>",
 		'<cmd>lua require("haiku").save_and_close()<CR>',
 		{ noremap = true, desc = "Save note and close window" }
+	)
+
+	vim.api.nvim_buf_set_keymap(
+		buffer,
+		"n",
+		"<Esc>",
+		'<cmd>lua require("haiku").save_and_close()<CR>',
+		{ noremap = true, silent = true, desc = "Save note and close" }
+	)
+
+	vim.api.nvim_buf_set_keymap(
+		buffer,
+		"i",
+		"<C-c>",
+		'<cmd>lua require("haiku").discard_and_close()<CR>',
+		{ noremap = true, silent = true, desc = "Discard note and close" }
 	)
 
 	local winnr = vim.api.nvim_open_win(buffer, true, opts)
