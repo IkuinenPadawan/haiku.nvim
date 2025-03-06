@@ -1,6 +1,7 @@
 local M = {}
 
 M.notes_winnr = nil
+M.notes_panel = nil
 
 M.setup = function(opts)
 	M.create_notes_file()
@@ -11,6 +12,13 @@ M.setup = function(opts)
 		"n",
 		"<Leader>h",
 		':lua require("haiku").toggle_notes()<CR>',
+		{ noremap = true, silent = true }
+	)
+
+	vim.api.nvim_set_keymap(
+		"n",
+		"<Leader>j",
+		':lua require("haiku").toggle_panel()<CR>',
 		{ noremap = true, silent = true }
 	)
 end
@@ -161,12 +169,48 @@ M.create_floating_window = function()
 	return winnr
 end
 
+M.create_floating_panel = function()
+	local win_width = vim.api.nvim_win_get_width(0)
+	local win_height = vim.api.nvim_win_get_height(0)
+	local width = math.floor(win_width / 3)
+	local col = win_width - width
+	local row = 0
+
+	local opts = {
+		relative = "win",
+		win = 0,
+		width = width,
+		height = win_height,
+		col = col,
+		row = row,
+		anchor = "NW",
+		style = "minimal",
+	}
+
+	local buf = vim.api.nvim_create_buf(false, true)
+
+	local winnr = vim.api.nvim_open_win(buf, true, opts)
+
+	vim.api.nvim_win_set_option(winnr, "winhl", "Normal:PanelNormal")
+
+	return winnr
+end
+
 M.toggle_notes = function()
 	if M.notes_winnr and vim.api.nvim_win_is_valid(M.notes_winnr) then
 		vim.api.nvim_win_close(M.notes_winnr, true)
 		M.notes_winnr = nil
 	else
 		M.notes_winnr = M.create_floating_window()
+	end
+end
+
+M.toggle_panel = function()
+	if M.notes_panel and vim.api.nvim_win_is_valid(M.notes_panel) then
+		vim.api.nvim_win_close(M.notes_panel, true)
+		M.notes_panel = nil
+	else
+		M.notes_panel = M.create_floating_panel()
 	end
 end
 
