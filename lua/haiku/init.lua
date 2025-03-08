@@ -169,6 +169,24 @@ M.create_floating_window = function()
 	return winnr
 end
 
+M.get_notes_buffer = function()
+	local buf = vim.api.nvim_create_buf(true, false)
+	local file = io.open(M.notes_path, "r")
+	if not file then
+		vim.api.nvim_err_writeln("Failed to open file: " .. M.notes_path)
+		return
+	end
+
+	local lines = {}
+	for line in file:lines() do
+		table.insert(lines, line)
+	end
+
+	file:close()
+
+	return { buf = buf, lines = lines }
+end
+
 M.create_floating_panel = function()
 	local win_width = vim.api.nvim_win_get_width(0)
 	local win_height = vim.api.nvim_win_get_height(0)
@@ -187,9 +205,11 @@ M.create_floating_panel = function()
 		style = "minimal",
 	}
 
-	local buf = vim.api.nvim_create_buf(false, true)
+	local buffer = M.get_notes_buffer()
 
-	local winnr = vim.api.nvim_open_win(buf, true, opts)
+	vim.api.nvim_buf_set_lines(buffer.buf, 0, -1, false, buffer.lines)
+
+	local winnr = vim.api.nvim_open_win(buffer.buf, true, opts)
 
 	vim.api.nvim_win_set_option(winnr, "winhl", "Normal:PanelNormal")
 
