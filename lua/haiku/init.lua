@@ -1,45 +1,45 @@
 local M = {}
 
-M.notes_winnr = nil
-M.notes_panel = nil
+M.haikus_winnr = nil
+M.haikus_panel = nil
 
 M.setup = function(opts)
 	opts = opts or {}
 
-	M.notes_path = opts.notes_path or vim.fn.expand("~/.local/share/nvim/haiku/notes.md")
-	M.create_notes_file()
+	M.haikus_path = opts.haikus_path or vim.fn.expand("~/.local/share/nvim/haiku/haikus.md")
+	M.create_haikus_file()
 
 	M.keymaps = vim.tbl_deep_extend("force", {
-		toggle_notes = "<Leader>h",
-		toggle_panel = "<Leader>j",
+		toggle_add_haiku = "<Leader>h",
+		toggle_haikus = "<Leader>H",
 	}, opts.keymaps or {})
 
 	vim.api.nvim_create_user_command("Haiku", function()
-		M.toggle_notes()
+		M.toggle_add_haiku()
 	end, {})
 
 	vim.api.nvim_set_keymap(
 		"n",
-		M.keymaps.toggle_notes,
-		':lua require("haiku").toggle_notes()<CR>',
+		M.keymaps.toggle_add_haiku,
+		':lua require("haiku").toggle_add_haiku()<CR>',
 		{ noremap = true, silent = true }
 	)
 
 	vim.api.nvim_set_keymap(
 		"n",
-		M.keymaps.toggle_panel,
-		':lua require("haiku").toggle_panel()<CR>',
+		M.keymaps.toggle_haikus,
+		':lua require("haiku").toggle_haikus()<CR>',
 		{ noremap = true, silent = true }
 	)
 end
 
-M.create_notes_file = function()
-	if vim.fn.filereadable(M.notes_path) ~= 1 then
-		local dir_path = vim.fn.fnamemodify(M.notes_path, ":h")
+M.create_haikus_file = function()
+	if vim.fn.filereadable(M.haikus_path) ~= 1 then
+		local dir_path = vim.fn.fnamemodify(M.haikus_path, ":h")
 		vim.fn.mkdir(dir_path, "p")
-		local file = io.open(M.notes_path, "w")
+		local file = io.open(M.haikus_path, "w")
 		if file then
-			file:write("# Haiku notes\n\n")
+			file:write("# Haikus\n\n")
 			file:close()
 		end
 	end
@@ -54,8 +54,8 @@ M.setup_buffer_options = function(bufnr)
 	vim.api.nvim_create_autocmd("BufWinLeave", {
 		buffer = bufnr,
 		callback = function()
-			if M.notes_winnr then
-				M.notes_winnr = nil
+			if M.haikus_winnr then
+				M.haikus_winnr = nil
 			end
 		end,
 	})
@@ -70,8 +70,8 @@ M.setup_buffer_options = function(bufnr)
 end
 
 M.save_and_close = function()
-	if M.notes_winnr and vim.api.nvim_win_is_valid(M.notes_winnr) then
-		local bufnr = vim.api.nvim_win_get_buf(M.notes_winnr)
+	if M.haikus_winnr and vim.api.nvim_win_is_valid(M.haikus_winnr) then
+		local bufnr = vim.api.nvim_win_get_buf(M.haikus_winnr)
 		local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
 		local has_content = false
@@ -84,13 +84,13 @@ M.save_and_close = function()
 
 		if has_content then
 			if #lines > 0 then
-				local notes_bufnr = vim.fn.bufnr(M.notes_path)
-				if notes_bufnr == -1 then
-					notes_bufnr = vim.fn.bufadd(M.notes_path)
-					vim.fn.bufload(notes_bufnr)
+				local haikus_bufnr = vim.fn.bufnr(M.haikus_path)
+				if haikus_bufnr == -1 then
+					haikus_bufnr = vim.fn.bufadd(M.haikus_path)
+					vim.fn.bufload(haikus_bufnr)
 				end
 
-				local current_lines = vim.api.nvim_buf_get_lines(notes_bufnr, 0, -1, false)
+				local current_lines = vim.api.nvim_buf_get_lines(haikus_bufnr, 0, -1, false)
 
 				local new_content = {}
 				table.insert(new_content, "")
@@ -99,9 +99,9 @@ M.save_and_close = function()
 					table.insert(new_content, line)
 				end
 
-				vim.api.nvim_buf_set_lines(notes_bufnr, #current_lines, #current_lines, false, new_content)
+				vim.api.nvim_buf_set_lines(haikus_bufnr, #current_lines, #current_lines, false, new_content)
 
-				vim.api.nvim_buf_call(notes_bufnr, function()
+				vim.api.nvim_buf_call(haikus_bufnr, function()
 					vim.cmd("silent write")
 				end)
 
@@ -109,17 +109,17 @@ M.save_and_close = function()
 			end
 		end
 		vim.api.nvim_buf_set_option(bufnr, "modified", false)
-		vim.api.nvim_win_close(M.notes_winnr, true)
-		M.notes_winnr = nil
+		vim.api.nvim_win_close(M.haikus_winnr, true)
+		M.haikus_winnr = nil
 	end
 end
 
 M.discard_and_close = function()
-	if M.notes_winnr and vim.api.nvim_win_is_valid(M.notes_winnr) then
-		local bufnr = vim.api.nvim_win_get_buf(M.notes_winnr)
+	if M.haikus_winnr and vim.api.nvim_win_is_valid(M.haikus_winnr) then
+		local bufnr = vim.api.nvim_win_get_buf(M.haikus_winnr)
 		vim.api.nvim_buf_set_option(bufnr, "modified", false)
-		vim.api.nvim_win_close(M.notes_winnr, true)
-		M.notes_winnr = nil
+		vim.api.nvim_win_close(M.haikus_winnr, true)
+		M.haikus_winnr = nil
 		vim.notify("Note discarded", vim.log.levels.INFO, { title = "Haiku" })
 	end
 end
@@ -177,11 +177,11 @@ M.create_floating_window = function()
 	return winnr
 end
 
-M.get_notes_buffer = function()
+M.get_haikus_buffer = function()
 	local buf = vim.api.nvim_create_buf(true, false)
-	local file = io.open(M.notes_path, "r")
+	local file = io.open(M.haikus_path, "r")
 	if not file then
-		vim.api.nvim_err_writeln("Failed to open file: " .. M.notes_path)
+		vim.api.nvim_err_writeln("Failed to open file: " .. M.haikus_path)
 		return
 	end
 
@@ -213,7 +213,7 @@ M.create_floating_panel = function()
 		style = "minimal",
 	}
 
-	local buffer = M.get_notes_buffer()
+	local buffer = M.get_haikus_buffer()
 
 	vim.api.nvim_buf_set_option(buffer.buf, "filetype", "markdown")
 	vim.api.nvim_buf_set_option(buffer.buf, "buftype", "nofile")
@@ -232,21 +232,21 @@ M.create_floating_panel = function()
 	return winnr
 end
 
-M.toggle_notes = function()
-	if M.notes_winnr and vim.api.nvim_win_is_valid(M.notes_winnr) then
-		vim.api.nvim_win_close(M.notes_winnr, true)
-		M.notes_winnr = nil
+M.toggle_add_haiku = function()
+	if M.haikus_winnr and vim.api.nvim_win_is_valid(M.haikus_winnr) then
+		vim.api.nvim_win_close(M.haikus_winnr, true)
+		M.haikus_winnr = nil
 	else
-		M.notes_winnr = M.create_floating_window()
+		M.haikus_winnr = M.create_floating_window()
 	end
 end
 
-M.toggle_panel = function()
-	if M.notes_panel and vim.api.nvim_win_is_valid(M.notes_panel) then
-		vim.api.nvim_win_close(M.notes_panel, true)
-		M.notes_panel = nil
+M.toggle_haikus = function()
+	if M.haikus_panel and vim.api.nvim_win_is_valid(M.haikus_panel) then
+		vim.api.nvim_win_close(M.haikus_panel, true)
+		M.haikus_panel = nil
 	else
-		M.notes_panel = M.create_floating_panel()
+		M.haikus_panel = M.create_floating_panel()
 	end
 end
 
