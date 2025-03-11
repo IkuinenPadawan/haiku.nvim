@@ -207,6 +207,12 @@ M.create_floating_panel = function()
 
 	local buffer = M.get_notes_buffer()
 
+	vim.api.nvim_buf_set_option(buffer.buf, "filetype", "markdown")
+	vim.api.nvim_buf_set_option(buffer.buf, "buftype", "nofile")
+	vim.api.nvim_buf_set_option(buffer.buf, "bufhidden", "wipe")
+	vim.api.nvim_buf_set_option(buffer.buf, "swapfile", false)
+	vim.api.nvim_buf_set_option(buffer.buf, "modified", false)
+
 	vim.api.nvim_buf_set_lines(buffer.buf, 0, -1, false, buffer.lines)
 
 	local winnr = vim.api.nvim_open_win(buffer.buf, true, opts)
