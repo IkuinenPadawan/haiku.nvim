@@ -215,6 +215,8 @@ M.create_floating_panel = function()
 
 	vim.api.nvim_buf_set_lines(buffer.buf, 0, -1, false, buffer.lines)
 
+	vim.api.nvim_buf_set_option(buffer.buf, "modifiable", false)
+
 	local winnr = vim.api.nvim_open_win(buffer.buf, true, opts)
 
 	vim.api.nvim_win_set_option(winnr, "winhl", "Normal:PanelNormal")
