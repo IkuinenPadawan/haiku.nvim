@@ -4,26 +4,34 @@ M.notes_winnr = nil
 M.notes_panel = nil
 
 M.setup = function(opts)
+	opts = opts or {}
+
+	M.notes_path = opts.notes_path or vim.fn.expand("~/.local/share/nvim/haiku/notes.md")
 	M.create_notes_file()
+
+	M.keymaps = vim.tbl_deep_extend("force", {
+		toggle_notes = "<Leader>h",
+		toggle_panel = "<Leader>j",
+	}, opts.keymaps or {})
+
 	vim.api.nvim_create_user_command("Haiku", function()
 		M.toggle_notes()
 	end, {})
+
 	vim.api.nvim_set_keymap(
 		"n",
-		"<Leader>h",
+		M.keymaps.toggle_notes,
 		':lua require("haiku").toggle_notes()<CR>',
 		{ noremap = true, silent = true }
 	)
 
 	vim.api.nvim_set_keymap(
 		"n",
-		"<Leader>j",
+		M.keymaps.toggle_panel,
 		':lua require("haiku").toggle_panel()<CR>',
 		{ noremap = true, silent = true }
 	)
 end
-
-M.notes_path = vim.fn.expand("~/.local/share/nvim/haiku/notes.md")
 
 M.create_notes_file = function()
 	if vim.fn.filereadable(M.notes_path) ~= 1 then
