@@ -30,8 +30,7 @@ Deep focus is precious in any creative work. When ideas or reminders arise, swit
     require('haiku').setup()
   end
 }
-
-
+```
 ### Using [packer](https://github.com/wbthomason/packer.nvim)
 
 ```lua
