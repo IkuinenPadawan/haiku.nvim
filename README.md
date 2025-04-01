@@ -35,7 +35,7 @@ Deep focus is precious in any creative work. When ideas or reminders arise, swit
 
 ```lua
 use {
-  'yourusername/haiku.nvim',
+  'IkuinenPadawanhaiku.nvim',
   config = function()
     require('haiku').setup()
   end
