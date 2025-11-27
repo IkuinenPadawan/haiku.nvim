@@ -178,21 +178,13 @@ M.create_floating_window = function()
 end
 
 M.get_haikus_buffer = function()
-	local buf = vim.api.nvim_create_buf(true, false)
-	local file = io.open(M.haikus_path, "r")
-	if not file then
-		vim.api.nvim_err_writeln("Failed to open file: " .. M.haikus_path)
-		return
+	local haikus_bufnr = vim.fn.bufnr(M.haikus_path)
+	if haikus_bufnr == -1 then
+		haikus_bufnr = vim.fn.bufadd(M.haikus_path)
+		vim.fn.bufload(haikus_bufnr)
 	end
 
-	local lines = {}
-	for line in file:lines() do
-		table.insert(lines, line)
-	end
-
-	file:close()
-
-	return { buf = buf, lines = lines }
+	return haikus_bufnr
 end
 
 M.create_floating_panel = function()
@@ -213,19 +205,15 @@ M.create_floating_panel = function()
 		style = "minimal",
 	}
 
-	local buffer = M.get_haikus_buffer()
+	local bufnr = M.get_haikus_buffer()
 
-	vim.api.nvim_buf_set_option(buffer.buf, "filetype", "markdown")
-	vim.api.nvim_buf_set_option(buffer.buf, "buftype", "nofile")
-	vim.api.nvim_buf_set_option(buffer.buf, "bufhidden", "wipe")
-	vim.api.nvim_buf_set_option(buffer.buf, "swapfile", false)
-	vim.api.nvim_buf_set_option(buffer.buf, "modified", false)
+	vim.api.nvim_buf_set_option(bufnr, "filetype", "markdown")
+	vim.api.nvim_buf_set_option(bufnr, "bufhidden", "hide")
+	vim.api.nvim_buf_set_option(bufnr, "buftype", "")
+	vim.api.nvim_buf_set_option(bufnr, "swapfile", false)
+	vim.api.nvim_buf_set_option(bufnr, "modified", false)
 
-	vim.api.nvim_buf_set_lines(buffer.buf, 0, -1, false, buffer.lines)
-
-	vim.api.nvim_buf_set_option(buffer.buf, "modifiable", false)
-
-	local winnr = vim.api.nvim_open_win(buffer.buf, true, opts)
+	local winnr = vim.api.nvim_open_win(bufnr, true, opts)
 
 	vim.api.nvim_win_set_option(winnr, "winhl", "Normal:PanelNormal")
 
