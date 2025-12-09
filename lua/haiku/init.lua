@@ -64,17 +64,10 @@ end
 
 M.get_insertion_point = function(lines, header_line)
   if header_line == nil then
-    return #lines
+    return 1
   end
 
-  for i = header_line + 1, #lines do
-    local line = lines[i]
-    if line:match '^##%s' then
-      return i
-    end
-  end
-
-  return #lines
+  return header_line + 1
 end
 
 M.setup_buffer_options = function(bufnr)
@@ -125,14 +118,15 @@ M.save_and_close = function()
         local current_lines = vim.api.nvim_buf_get_lines(haikus_bufnr, 0, -1, false)
 
         local new_content = {}
-        table.insert(new_content, '')
 
         for _, line in ipairs(lines) do
           table.insert(new_content, line)
         end
 
+        table.insert(new_content, '')
+
         if not M.daily_headers then
-          vim.api.nvim_buf_set_lines(haikus_bufnr, #current_lines, #current_lines, false, new_content)
+          vim.api.nvim_buf_set_lines(haikus_bufnr, 1, 1, false, new_content)
         else
           local today_header = M.get_date_header()
           local header_idx = M.find_header_line(current_lines, today_header)
@@ -142,7 +136,7 @@ M.save_and_close = function()
             table.insert(new_content, 1, today_header)
           end
 
-          vim.api.nvim_buf_set_lines(haikus_bufnr, insertion_point, insertion_point, false, new_content)
+          vim.api.nvim_buf_set_lines(haikus_bufnr, insertion_point - 1, insertion_point - 1, false, new_content)
         end
 
         vim.api.nvim_buf_call(haikus_bufnr, function()
