@@ -9,7 +9,7 @@ M.setup = function(opts)
   M.haikus_path = opts.haikus_path or vim.fn.expand '~/.local/share/nvim/haiku/haikus.md'
   M.create_haikus_file()
 
-  M.daily_headers = opts.daily_headers or false
+  M.daily_headers = opts.daily_headers or true
 
   M.keymaps = vim.tbl_deep_extend('force', {
     toggle_add_haiku = '<Leader>h',
