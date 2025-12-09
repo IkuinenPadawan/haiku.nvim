@@ -59,6 +59,7 @@ use {
 ```lua
 require('haiku').setup({
   haikus_path = "~/.local/share/nvim/haiku/haikus.md",
+  daily_headers = true, -- Organize haikus under date headers (default: true)
   keymaps = {
     toggle_add_haiku = "<Leader>h",
     toggle_haikus = "<Leader>H",
