@@ -2,6 +2,7 @@ local M = {}
 
 M.haikus_winnr = nil
 M.haikus_panel = nil
+M.saved_context = {}
 
 M.setup = function(opts)
   opts = opts or {}
@@ -70,6 +71,15 @@ M.get_insertion_point = function(lines, header_line)
   return header_line + 1
 end
 
+M.get_context = function()
+  local bufname = vim.api.nvim_buf_get_name(0)
+  if bufname == M.haikus_path or vim.bo.buftype == 'terminal' then
+    return nil
+  end
+
+  return { vim.api.nvim_buf_get_name(0), vim.fn.line '.' }
+end
+
 M.setup_buffer_options = function(bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'filetype', 'markdown')
   vim.api.nvim_buf_set_option(bufnr, 'buftype', 'nofile')
@@ -123,8 +133,6 @@ M.save_and_close = function()
           table.insert(new_content, line)
         end
 
-        table.insert(new_content, '')
-
         if not M.daily_headers then
           vim.api.nvim_buf_set_lines(haikus_bufnr, 1, 1, false, new_content)
         else
@@ -135,6 +143,12 @@ M.save_and_close = function()
           if header_idx == nil then
             table.insert(new_content, 1, today_header)
           end
+
+          if M.saved_context ~= nil then
+            table.insert(new_content, '`→ ' .. M.saved_context[1] .. ':' .. M.saved_context[2] .. '`')
+          end
+
+          table.insert(new_content, '')
 
           vim.api.nvim_buf_set_lines(haikus_bufnr, insertion_point - 1, insertion_point - 1, false, new_content)
         end
@@ -263,6 +277,7 @@ M.toggle_add_haiku = function()
     vim.api.nvim_win_close(M.haikus_winnr, true)
     M.haikus_winnr = nil
   else
+    M.saved_context = M.get_context()
     M.haikus_winnr = M.create_floating_window()
   end
 end
