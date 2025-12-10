@@ -15,8 +15,10 @@ Deep focus is precious in any creative work. When ideas or reminders arise, swit
 ## Features
 
 - **Distraction-free capture**: Toggle a floating window, jot down thoughts, and return to work without breaking flow
+- **Contextual breadcrumbs**: Automatically captures where each thought originated
+- **Chronological order**: Recent haikus appear first with daily headers
 - **Persistent thoughts**: Notes are saved to a markdown file
-- **Instant recall**: Toggle your note collection from anywhere (read-only)
+- **Instant recall**: Toggle your note collection from anywhere
 - **Stay in Neovim**: Never leave where the heart is
 
 ## Installation
@@ -36,7 +38,7 @@ Deep focus is precious in any creative work. When ideas or reminders arise, swit
 
 ```lua
 use {
-  'yourusername/haiku.nvim',
+  'IkuinenPadawan/haiku.nvim',
   config = function()
     require('haiku').setup()
   end
@@ -60,6 +62,7 @@ use {
 require('haiku').setup({
   haikus_path = "~/.local/share/nvim/haiku/haikus.md",
   daily_headers = true, -- Organize haikus under date headers (default: true)
+  capture_context = true, --Track where haikus were captured (default: true)
   keymaps = {
     toggle_add_haiku = "<Leader>h",
     toggle_haikus = "<Leader>H",
