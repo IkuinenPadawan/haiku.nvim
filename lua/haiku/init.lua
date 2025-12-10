@@ -11,6 +11,7 @@ M.setup = function(opts)
   M.create_haikus_file()
 
   M.daily_headers = opts.daily_headers or true
+  M.capture_context = opts.capture_context or true
 
   M.keymaps = vim.tbl_deep_extend('force', {
     toggle_add_haiku = '<Leader>h',
@@ -144,7 +145,7 @@ M.save_and_close = function()
             table.insert(new_content, 1, today_header)
           end
 
-          if M.saved_context ~= nil then
+          if M.saved_context ~= nil and M.capture_context then
             table.insert(new_content, '`→ ' .. M.saved_context[1] .. ':' .. M.saved_context[2] .. '`')
           end
 
@@ -277,7 +278,9 @@ M.toggle_add_haiku = function()
     vim.api.nvim_win_close(M.haikus_winnr, true)
     M.haikus_winnr = nil
   else
-    M.saved_context = M.get_context()
+    if M.capture_context then
+      M.saved_context = M.get_context()
+    end
     M.haikus_winnr = M.create_floating_window()
   end
 end
