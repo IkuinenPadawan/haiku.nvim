@@ -88,6 +88,22 @@ M.get_context = function()
   return { vim.api.nvim_buf_get_name(0), vim.fn.line '.' }
 end
 
+M.parse_reference = function(line_text)
+  local path, line = line_text:match '`→%s*(.+):(%d+)`'
+  return { path, tonumber(line) }
+end
+
+M.jump_to_reference = function()
+  local cur_line = vim.api.nvim_win_get_cursor(0)
+  local row = cur_line[1] - 1
+  local line_text = vim.api.nvim_buf_get_lines(0, row, row + 1, false)[1]
+  local parsed = M.parse_reference(line_text)
+  print(parsed[1])
+  vim.cmd('edit' .. parsed[1])
+
+  vim.api.nvim_win_set_cursor(0, { row, 0 })
+end
+
 M.setup_buffer_options = function(bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'filetype', 'markdown')
   vim.api.nvim_buf_set_option(bufnr, 'buftype', 'nofile')
@@ -276,6 +292,8 @@ M.create_floating_panel = function()
   local winnr = vim.api.nvim_open_win(bufnr, true, opts)
 
   vim.api.nvim_win_set_option(winnr, 'winhl', 'Normal:PanelNormal')
+
+  vim.keymap.set('n', 'gr', M.jump_to_reference, { buffer = bufnr })
 
   return winnr
 end
