@@ -101,7 +101,7 @@ M.jump_to_reference = function()
   print(parsed[1])
   vim.cmd('edit' .. parsed[1])
 
-  vim.api.nvim_win_set_cursor(0, { row, 0 })
+  vim.api.nvim_win_set_cursor(0, { parsed[2], 0 })
 end
 
 M.setup_buffer_options = function(bufnr)
