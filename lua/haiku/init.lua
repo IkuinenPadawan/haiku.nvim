@@ -170,6 +170,12 @@ M.save_and_close = function()
           table.insert(new_content, line)
         end
 
+        if M.saved_context ~= nil and M.capture_context then
+          table.insert(new_content, '`→ ' .. M.saved_context[1] .. ':' .. M.saved_context[2] .. '`')
+        end
+
+        table.insert(new_content, '')
+
         if not M.daily_headers then
           vim.api.nvim_buf_set_lines(haikus_bufnr, 1, 1, false, new_content)
         else
@@ -180,12 +186,6 @@ M.save_and_close = function()
           if header_idx == nil then
             table.insert(new_content, 1, today_header)
           end
-
-          if M.saved_context ~= nil and M.capture_context then
-            table.insert(new_content, '`→ ' .. M.saved_context[1] .. ':' .. M.saved_context[2] .. '`')
-          end
-
-          table.insert(new_content, '')
 
           vim.api.nvim_buf_set_lines(haikus_bufnr, insertion_point - 1, insertion_point - 1, false, new_content)
         end
