@@ -3,6 +3,7 @@ local M = {}
 M.haikus_winnr = nil
 M.haikus_panel = nil
 M.saved_context = {}
+M.source_winnr = nil
 
 M.setup = function(opts)
   opts = opts or {}
@@ -103,8 +104,15 @@ M.jump_to_reference = function()
       break
     end
     if line:match('→') then
-      vim.api.nvim_win_set_cursor(0, { i, 5 })
-      vim.cmd('normal! gF')
+      local ref = M.parse_reference(line)
+      if ref[1] and ref[2] and M.source_winnr and vim.api.nvim_win_is_valid(M.source_winnr) then
+        local bufnr = vim.fn.bufadd(ref[1])
+        vim.fn.bufload(bufnr)
+        vim.api.nvim_win_set_buf(M.source_winnr, bufnr)
+        vim.api.nvim_win_set_cursor(M.source_winnr, { ref[2], 0 })
+        vim.api.nvim_set_current_win(M.source_winnr)
+      end
+      return
     end
   end
 end
@@ -319,7 +327,9 @@ M.toggle_haikus = function()
   if M.haikus_panel and vim.api.nvim_win_is_valid(M.haikus_panel) then
     vim.api.nvim_win_close(M.haikus_panel, true)
     M.haikus_panel = nil
+    M.source_winnr = nil
   else
+    M.source_winnr = vim.api.nvim_get_current_win()
     M.haikus_panel = M.create_floating_panel()
   end
 end
