@@ -94,14 +94,19 @@ M.parse_reference = function(line_text)
 end
 
 M.jump_to_reference = function()
-  local cur_line = vim.api.nvim_win_get_cursor(0)
-  local row = cur_line[1] - 1
-  local line_text = vim.api.nvim_buf_get_lines(0, row, row + 1, false)[1]
-  local parsed = M.parse_reference(line_text)
-  print(parsed[1])
-  vim.cmd('edit' .. parsed[1])
+  local row = vim.api.nvim_win_get_cursor(0)[1]
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
 
-  vim.api.nvim_win_set_cursor(0, { parsed[2], 0 })
+  for i = row, #lines do
+    local line = lines[i]
+    if line:match('^%s*$') then
+      break
+    end
+    if line:match('→') then
+      vim.api.nvim_win_set_cursor(0, { i, 5 })
+      vim.cmd('normal! gF')
+    end
+  end
 end
 
 M.setup_buffer_options = function(bufnr)
