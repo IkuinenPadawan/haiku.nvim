@@ -258,13 +258,15 @@ M.save_visual_selection = function()
     end
 
     table.insert(new_content, '')
+    local haikus_lines = vim.api.nvim_buf_get_lines(haikus_bufnr, 0, -1, false)
+
 
     if not M.daily_headers then
       vim.api.nvim_buf_set_lines(haikus_bufnr, 1, 1, false, new_content)
     else
       local today_header = M.get_date_header()
-      local header_idx = M.find_header_line(lines, today_header)
-      local insertion_point = M.get_insertion_point(lines, header_idx)
+      local header_idx = M.find_header_line(haikus_lines, today_header)
+      local insertion_point = M.get_insertion_point(haikus_lines, header_idx)
 
       if header_idx == nil then
         table.insert(new_content, 1, today_header)
