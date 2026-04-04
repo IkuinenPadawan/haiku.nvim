@@ -228,6 +228,59 @@ M.discard_and_close = function()
   end
 end
 
+M.get_visual_selection = function()
+  local start_pos = vim.fn.getpos("'<")
+  local end_pos = vim.fn.getpos("'>")
+  local lines = vim.api.nvim_buf_get_lines(0, start_pos[2] - 1, end_pos[2], false)
+  lines[1] = lines[1]:sub(start_pos[3])
+  lines[#lines] = lines[#lines]:sub(1, end_pos[3])
+  return lines
+end
+
+M.save_visual_selection = function()
+  local lines = M.get_visual_selection()
+
+  if #lines > 0 then
+    local haikus_bufnr = vim.fn.bufnr(M.haikus_path)
+    if haikus_bufnr == -1 then
+      haikus_bufnr = vim.fn.bufadd(M.haikus_path)
+      vim.fn.bufload(haikus_bufnr)
+    end
+
+    local new_content = {}
+
+    for _, line in ipairs(lines) do
+      table.insert(new_content, line)
+    end
+
+    if M.saved_context ~= nil and M.capture_context then
+      table.insert(new_content, '`→ ' .. M.saved_context[1] .. ':' .. M.saved_context[2] .. '`')
+    end
+
+    table.insert(new_content, '')
+
+    if not M.daily_headers then
+      vim.api.nvim_buf_set_lines(haikus_bufnr, 1, 1, false, new_content)
+    else
+      local today_header = M.get_date_header()
+      local header_idx = M.find_header_line(lines, today_header)
+      local insertion_point = M.get_insertion_point(lines, header_idx)
+
+      if header_idx == nil then
+        table.insert(new_content, 1, today_header)
+      end
+
+      vim.api.nvim_buf_set_lines(haikus_bufnr, insertion_point - 1, insertion_point - 1, false, new_content)
+    end
+
+        vim.api.nvim_buf_call(haikus_bufnr, function()
+          vim.cmd 'silent write'
+        end)
+
+        vim.notify('Haiku saved', vim.log.levels.INFO)
+      end
+end
+
 M.create_floating_window = function()
   local width = math.floor(vim.o.columns * 0.3)
   local height = 3
@@ -326,19 +379,14 @@ M.create_floating_panel = function()
   return winnr
 end
 
-M.get_visual_selection = function()
-  local start_pos = vim.fn.getpos("'<")
-  local end_pos = vim.fn.getpos("'>")
-  local lines = vim.api.nvim_buf_get_lines(0, start_pos[2] - 1, end_pos[2], false)
-  lines[1] = lines[1]:sub(start_pos[3])
-  lines[#lines] = lines[#lines]:sub(1, end_pos[3])
-  local text = table.concat(lines, "\n")
-  print(text)
-end
+
 
 M.toggle_add_haiku = function(mode)
   if mode == "v" or mode == "V" or mode == "\22" then
-    M.get_visual_selection()
+    if M.capture_context then
+        M.saved_context = M.get_context()
+      end
+    M.save_visual_selection()
   else
     if M.haikus_winnr and vim.api.nvim_win_is_valid(M.haikus_winnr) then
       vim.api.nvim_win_close(M.haikus_winnr, true)
