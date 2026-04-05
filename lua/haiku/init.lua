@@ -232,8 +232,8 @@ M.get_visual_selection = function()
   local start_pos = vim.fn.getpos("'<")
   local end_pos = vim.fn.getpos("'>")
   local lines = vim.api.nvim_buf_get_lines(0, start_pos[2] - 1, end_pos[2], false)
-  lines[1] = lines[1]:sub(start_pos[3])
   lines[#lines] = lines[#lines]:sub(1, end_pos[3])
+  lines[1] = lines[1]:sub(start_pos[3])
   return lines
 end
 
