@@ -206,11 +206,11 @@ M.write_haiku = function(lines, bufnr, visual_save)
 
         vim.notify('Haiku saved', vim.log.levels.INFO)
     end
-    if not visual_save and bufnr ~= nil then
-      vim.api.nvim_buf_set_option(bufnr, 'modified', false)
-      vim.api.nvim_win_close(M.haikus_winnr, true)
-      M.haikus_winnr = nil
-    end
+  end
+ if not visual_save and bufnr ~= nil then
+    vim.api.nvim_buf_set_option(bufnr, 'modified', false)
+    vim.api.nvim_win_close(M.haikus_winnr, true)
+    M.haikus_winnr = nil
   end
 end
 
@@ -261,7 +261,7 @@ M.create_floating_window = function()
     col = col,
     row = row,
     style = 'minimal',
-    border = 'rounded',
+    border = M.ui_opts.border,
     title = 'Haiku',
     title_pos = 'center',
   }
@@ -294,7 +294,7 @@ M.create_floating_window = function()
 
   local winnr = vim.api.nvim_open_win(buffer, true, opts)
   vim.cmd 'startinsert'
-  vim.api.nvim_win_set_option(winnr, 'winblend', 10)
+  vim.api.nvim_win_set_option(winnr, 'winblend', M.ui_opts.windblend)
   vim.api.nvim_win_set_option(winnr, 'cursorline', true)
 
   return winnr
