@@ -157,50 +157,60 @@ M.setup_buffer_options = function(bufnr)
 end
 
 M.write_haiku = function(lines, bufnr, visual_save)
-  if #lines > 0 then
-    local haikus_bufnr = vim.fn.bufnr(M.haikus_path)
-    if haikus_bufnr == -1 then
-      haikus_bufnr = vim.fn.bufadd(M.haikus_path)
-      vim.fn.bufload(haikus_bufnr)
-    end
-
-    local new_content = {}
-
+  local has_content = false
     for _, line in ipairs(lines) do
-      table.insert(new_content, line)
+      if line:match '%S' then
+        has_content = true
+        break
+      end
     end
 
-    if M.saved_context ~= nil and M.capture_context then
-      table.insert(new_content, '`→ ' .. M.saved_context[1] .. ':' .. M.saved_context[2] .. '`')
-    end
-
-    table.insert(new_content, '')
-    local haikus_lines = vim.api.nvim_buf_get_lines(haikus_bufnr, 0, -1, false)
-
-    if not M.daily_headers then
-      vim.api.nvim_buf_set_lines(haikus_bufnr, 1, 1, false, new_content)
-    else
-      local today_header = M.get_date_header()
-      local header_idx = M.find_header_line(haikus_lines, today_header)
-      local insertion_point = M.get_insertion_point(haikus_lines, header_idx)
-
-      if header_idx == nil then
-        table.insert(new_content, 1, today_header)
+  if has_content then
+    if #lines > 0 then
+      local haikus_bufnr = vim.fn.bufnr(M.haikus_path)
+      if haikus_bufnr == -1 then
+        haikus_bufnr = vim.fn.bufadd(M.haikus_path)
+        vim.fn.bufload(haikus_bufnr)
       end
 
-      vim.api.nvim_buf_set_lines(haikus_bufnr, insertion_point - 1, insertion_point - 1, false, new_content)
+      local new_content = {}
+
+      for _, line in ipairs(lines) do
+        table.insert(new_content, line)
+      end
+
+      if M.saved_context ~= nil and M.capture_context then
+        table.insert(new_content, '`→ ' .. M.saved_context[1] .. ':' .. M.saved_context[2] .. '`')
+      end
+
+      table.insert(new_content, '')
+      local haikus_lines = vim.api.nvim_buf_get_lines(haikus_bufnr, 0, -1, false)
+
+      if not M.daily_headers then
+        vim.api.nvim_buf_set_lines(haikus_bufnr, 1, 1, false, new_content)
+      else
+        local today_header = M.get_date_header()
+        local header_idx = M.find_header_line(haikus_lines, today_header)
+        local insertion_point = M.get_insertion_point(haikus_lines, header_idx)
+
+        if header_idx == nil then
+          table.insert(new_content, 1, today_header)
+        end
+
+        vim.api.nvim_buf_set_lines(haikus_bufnr, insertion_point - 1, insertion_point - 1, false, new_content)
+      end
+
+      vim.api.nvim_buf_call(haikus_bufnr, function()
+          vim.cmd 'silent write'
+        end)
+
+        vim.notify('Haiku saved', vim.log.levels.INFO)
     end
-
-    vim.api.nvim_buf_call(haikus_bufnr, function()
-        vim.cmd 'silent write'
-      end)
-
-      vim.notify('Haiku saved', vim.log.levels.INFO)
-  end
-  if not visual_save and bufnr ~= nil then
-    vim.api.nvim_buf_set_option(bufnr, 'modified', false)
-    vim.api.nvim_win_close(M.haikus_winnr, true)
-    M.haikus_winnr = nil
+    if not visual_save and bufnr ~= nil then
+      vim.api.nvim_buf_set_option(bufnr, 'modified', false)
+      vim.api.nvim_win_close(M.haikus_winnr, true)
+      M.haikus_winnr = nil
+    end
   end
 end
 
@@ -209,17 +219,7 @@ M.save_and_close = function()
     local bufnr = vim.api.nvim_win_get_buf(M.haikus_winnr)
     local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
-    local has_content = false
-    for _, line in ipairs(lines) do
-      if line:match '%S' then
-        has_content = true
-        break
-      end
-    end
-
-    if has_content then
-      M.write_haiku(lines, bufnr, false)
-    end
+    M.write_haiku(lines, bufnr, false)
   end
 end
 
