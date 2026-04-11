@@ -27,6 +27,18 @@ M.setup = function(opts)
     get_visual_selection = '<Leader>g'
   }, opts.keymaps or {})
 
+  M.ui_opts = vim.tbl_deep_extend('force', {
+    border = 'rounded',
+    winblend = 0,
+    win_width = 0.3,
+    win_height = 3,
+    panel_width = 0.33,
+    panel_border = 'none',
+  }, opts.ui or {})
+
+  M.date_format = opts.date_format or '%d-%m-%Y'
+  M.notify = opts.notify ~= false  -- default true
+
   vim.api.nvim_create_user_command('Haiku', function()
     M.toggle_add_haiku()
   end, {})
@@ -61,7 +73,7 @@ M.setup = function(opts)
 end
 
 M.get_date_header = function()
-  local todays_date = os.date '%d-%m-%Y'
+  local todays_date = os.date(M.date_format)
   return '## ' .. todays_date
 end
 
@@ -204,7 +216,7 @@ M.write_haiku = function(lines, bufnr, visual_save)
           vim.cmd 'silent write'
         end)
 
-        vim.notify('Haiku saved', vim.log.levels.INFO)
+        if M.notify then vim.notify('Haiku saved', vim.log.levels.INFO) end
     end
   end
  if not visual_save and bufnr ~= nil then
@@ -229,7 +241,7 @@ M.discard_and_close = function()
     vim.api.nvim_buf_set_option(bufnr, 'modified', false)
     vim.api.nvim_win_close(M.haikus_winnr, true)
     M.haikus_winnr = nil
-    vim.notify('Note discarded', vim.log.levels.INFO, { title = 'Haiku' })
+    if M.notify then vim.notify('Note discarded', vim.log.levels.INFO, { title = 'Haiku' }) end
   end
 end
 
@@ -248,8 +260,8 @@ M.save_visual_selection = function()
 end
 
 M.create_floating_window = function()
-  local width = math.floor(vim.o.columns * 0.3)
-  local height = 3
+  local width = math.floor(vim.o.columns * M.ui_opts.win_width)
+  local height = M.ui_opts.win_height
 
   local col = math.floor((vim.o.columns - width) / 2)
   local row = math.floor((vim.o.lines - height) / 2)
@@ -294,7 +306,7 @@ M.create_floating_window = function()
 
   local winnr = vim.api.nvim_open_win(buffer, true, opts)
   vim.cmd 'startinsert'
-  vim.api.nvim_win_set_option(winnr, 'winblend', M.ui_opts.windblend)
+  vim.api.nvim_win_set_option(winnr, 'winblend', M.ui_opts.winblend)
   vim.api.nvim_win_set_option(winnr, 'cursorline', true)
 
   return winnr
@@ -313,7 +325,7 @@ end
 M.create_floating_panel = function()
   local win_width = vim.api.nvim_win_get_width(0)
   local win_height = vim.api.nvim_win_get_height(0)
-  local width = math.floor(win_width / 3)
+  local width = math.floor(win_width * M.ui_opts.panel_width)
   local col = win_width - width
   local row = 0
 
@@ -326,6 +338,7 @@ M.create_floating_panel = function()
     row = row,
     anchor = 'NW',
     style = 'minimal',
+    border = M.ui_opts.panel_border,
   }
 
   local bufnr = M.get_haikus_buffer()
