@@ -23,6 +23,7 @@ M.setup = function(opts)
 
   M.keymaps = vim.tbl_deep_extend('force', {
     toggle_add_haiku = '<Leader>h',
+    toggle_add_haiku_ctx_invert = '<Leader>ih',
     toggle_haikus = '<Leader>H',
     get_visual_selection = '<Leader>g',
   }, opts.keymaps or {})
@@ -51,9 +52,23 @@ M.setup = function(opts)
   )
 
   vim.api.nvim_set_keymap(
+    'n',
+    M.keymaps.toggle_add_haiku_ctx_invert,
+    ':lua require("haiku").toggle_add_haiku("n", true)<CR>',
+    { noremap = true, silent = true }
+  )
+
+  vim.api.nvim_set_keymap(
     'v',
     M.keymaps.toggle_add_haiku,
     ':lua require("haiku").toggle_add_haiku("v")<CR>',
+    { noremap = true, silent = true }
+  )
+
+  vim.api.nvim_set_keymap(
+    'v',
+    M.keymaps.toggle_add_haiku_ctx_invert,
+    ':lua require("haiku").toggle_add_haiku("v", true)<CR>',
     { noremap = true, silent = true }
   )
 
@@ -191,7 +206,7 @@ M.write_haiku = function(lines, bufnr, visual_save)
         table.insert(new_content, line)
       end
 
-      if M.saved_context ~= nil and M.capture_context then
+      if M.saved_context ~= nil then
         table.insert(new_content, '`→ ' .. M.saved_context[1] .. ':' .. M.saved_context[2] .. '`')
       end
 
@@ -362,20 +377,17 @@ M.create_floating_panel = function()
   return winnr
 end
 
-M.toggle_add_haiku = function(mode)
+M.toggle_add_haiku = function(mode, ctx_invert)
+  local capture = M.capture_context ~= (ctx_invert == true)
   if mode == 'v' or mode == 'V' or mode == '\22' then
-    if M.capture_context then
-      M.saved_context = M.get_context()
-    end
+    M.saved_context = capture and M.get_context() or nil
     M.save_visual_selection()
   else
     if M.haikus_winnr and vim.api.nvim_win_is_valid(M.haikus_winnr) then
       vim.api.nvim_win_close(M.haikus_winnr, true)
       M.haikus_winnr = nil
     else
-      if M.capture_context then
-        M.saved_context = M.get_context()
-      end
+      M.saved_context = capture and M.get_context() or nil
       M.haikus_winnr = M.create_floating_window()
     end
   end
