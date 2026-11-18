@@ -65,16 +65,18 @@ use {
 
 ## Usage
 
-| Key           | Mode          | Action                          |
-|---------------|---------------|---------------------------------|
-| `<Leader>h`   | Normal        | Toggle note taking window       |
-| `<Leader>h`   | Visual        | Save selection as haiku         |
-| `<Leader>H`   | Normal        | Toggle notes panel              |
-| `<Enter>`     | Normal        | Save note and close             |
-| `<Esc>`       | Normal        | Save note and close             |
-| `<C-c>`       | Insert        | Discard note and close          |
-| `gr`          | Normal        | Jump to haiku's source location |
-| `:Haiku`      | Command       | Toggle note window              |
+| Key            | Mode          | Action                                |
+|----------------|---------------|---------------------------------------|
+| `<Leader>h`    | Normal        | Toggle note taking window             |
+| `<Leader>ih`   | Normal        | As above but inverted context capture |
+| `<Leader>h`    | Visual        | Save selection as haiku               |
+| `<Leader>ih`   | Visual        | As above but inverted context capture |
+| `<Leader>H`    | Normal        | Toggle notes panel                    |
+| `<Enter>`      | Normal        | Save note and close                   |
+| `<Esc>`        | Normal        | Save note and close                   |
+| `<C-c>`        | Insert        | Discard note and close                |
+| `gr`           | Normal        | Jump to haiku's source location       |
+| `:Haiku`       | Command       | Toggle note window                    |
 
 ## Output
 
@@ -109,6 +111,7 @@ require('haiku').setup({
   notify = true,           -- Show notifications on save/discard (default: true)
   keymaps = {
     toggle_add_haiku = "<Leader>h",
+    toggle_add_haiku_ctx_invert = "<Leader>ih", -- Invert context capture so if context capture is on, add haiku without it
     toggle_haikus = "<Leader>H",
   },
   ui = {
