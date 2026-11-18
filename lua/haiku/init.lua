@@ -23,8 +23,9 @@ M.setup = function(opts)
 
   M.keymaps = vim.tbl_deep_extend('force', {
     toggle_add_haiku = '<Leader>h',
+    toggle_add_haiku_ctx_invert = '<Leader>ih',
     toggle_haikus = '<Leader>H',
-    get_visual_selection = '<Leader>g'
+    get_visual_selection = '<Leader>g',
   }, opts.keymaps or {})
 
   M.ui_opts = vim.tbl_deep_extend('force', {
@@ -37,7 +38,7 @@ M.setup = function(opts)
   }, opts.ui or {})
 
   M.date_format = opts.date_format or '%d-%m-%Y'
-  M.notify = opts.notify ~= false  -- default true
+  M.notify = opts.notify ~= false -- default true
 
   vim.api.nvim_create_user_command('Haiku', function()
     M.toggle_add_haiku()
@@ -51,9 +52,23 @@ M.setup = function(opts)
   )
 
   vim.api.nvim_set_keymap(
+    'n',
+    M.keymaps.toggle_add_haiku_ctx_invert,
+    ':lua require("haiku").toggle_add_haiku("n", true)<CR>',
+    { noremap = true, silent = true }
+  )
+
+  vim.api.nvim_set_keymap(
     'v',
     M.keymaps.toggle_add_haiku,
     ':lua require("haiku").toggle_add_haiku("v")<CR>',
+    { noremap = true, silent = true }
+  )
+
+  vim.api.nvim_set_keymap(
+    'v',
+    M.keymaps.toggle_add_haiku_ctx_invert,
+    ':lua require("haiku").toggle_add_haiku("v", true)<CR>',
     { noremap = true, silent = true }
   )
 
@@ -127,10 +142,10 @@ M.jump_to_reference = function()
 
   for i = row, #lines do
     local line = lines[i]
-    if line:match('^%s*$') then
+    if line:match '^%s*$' then
       break
     end
-    if line:match('→') then
+    if line:match '→' then
       local ref = M.parse_reference(line)
       if ref[1] and ref[2] and M.source_winnr and vim.api.nvim_win_is_valid(M.source_winnr) then
         local bufnr = vim.fn.bufadd(ref[1])
@@ -170,12 +185,12 @@ end
 
 M.write_haiku = function(lines, bufnr, visual_save)
   local has_content = false
-    for _, line in ipairs(lines) do
-      if line:match '%S' then
-        has_content = true
-        break
-      end
+  for _, line in ipairs(lines) do
+    if line:match '%S' then
+      has_content = true
+      break
     end
+  end
 
   if has_content then
     if #lines > 0 then
@@ -191,7 +206,7 @@ M.write_haiku = function(lines, bufnr, visual_save)
         table.insert(new_content, line)
       end
 
-      if M.saved_context ~= nil and M.capture_context then
+      if M.saved_context ~= nil then
         table.insert(new_content, '`→ ' .. M.saved_context[1] .. ':' .. M.saved_context[2] .. '`')
       end
 
@@ -213,13 +228,15 @@ M.write_haiku = function(lines, bufnr, visual_save)
       end
 
       vim.api.nvim_buf_call(haikus_bufnr, function()
-          vim.cmd 'silent write'
-        end)
+        vim.cmd 'silent write'
+      end)
 
-        if M.notify then vim.notify('Haiku saved', vim.log.levels.INFO) end
+      if M.notify then
+        vim.notify('Haiku saved', vim.log.levels.INFO)
+      end
     end
   end
- if not visual_save and bufnr ~= nil then
+  if not visual_save and bufnr ~= nil then
     vim.api.nvim_buf_set_option(bufnr, 'modified', false)
     vim.api.nvim_win_close(M.haikus_winnr, true)
     M.haikus_winnr = nil
@@ -241,13 +258,15 @@ M.discard_and_close = function()
     vim.api.nvim_buf_set_option(bufnr, 'modified', false)
     vim.api.nvim_win_close(M.haikus_winnr, true)
     M.haikus_winnr = nil
-    if M.notify then vim.notify('Note discarded', vim.log.levels.INFO, { title = 'Haiku' }) end
+    if M.notify then
+      vim.notify('Note discarded', vim.log.levels.INFO, { title = 'Haiku' })
+    end
   end
 end
 
 M.get_visual_selection = function()
-  local start_pos = vim.fn.getpos("'<")
-  local end_pos = vim.fn.getpos("'>")
+  local start_pos = vim.fn.getpos "'<"
+  local end_pos = vim.fn.getpos "'>"
   local lines = vim.api.nvim_buf_get_lines(0, start_pos[2] - 1, end_pos[2], false)
   lines[#lines] = lines[#lines]:sub(1, end_pos[3])
   lines[1] = lines[1]:sub(start_pos[3])
@@ -358,22 +377,17 @@ M.create_floating_panel = function()
   return winnr
 end
 
-
-
-M.toggle_add_haiku = function(mode)
-  if mode == "v" or mode == "V" or mode == "\22" then
-    if M.capture_context then
-        M.saved_context = M.get_context()
-      end
+M.toggle_add_haiku = function(mode, ctx_invert)
+  local capture = M.capture_context ~= (ctx_invert == true)
+  if mode == 'v' or mode == 'V' or mode == '\22' then
+    M.saved_context = capture and M.get_context() or nil
     M.save_visual_selection()
   else
     if M.haikus_winnr and vim.api.nvim_win_is_valid(M.haikus_winnr) then
       vim.api.nvim_win_close(M.haikus_winnr, true)
       M.haikus_winnr = nil
     else
-      if M.capture_context then
-        M.saved_context = M.get_context()
-      end
+      M.saved_context = capture and M.get_context() or nil
       M.haikus_winnr = M.create_floating_window()
     end
   end
